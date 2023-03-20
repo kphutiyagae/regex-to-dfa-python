@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<automata>
+	<states>
+		<A/>
+		<B/>
+		<C/>
+		<D/>
+	</states>
+	<transitions>
+		<A>
+			<B>c</B>
+			<C>a</C>
+		</A>
+		<C>
+			<D>b</D>
+		</C>
+	</transitions>
+</automata>
