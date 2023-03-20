@@ -4,15 +4,13 @@
 		<A/>
 		<B/>
 		<C/>
-		<D/>
 	</states>
 	<transitions>
 		<A>
-			<B>c</B>
-			<C>a</C>
+			<B>a</B>
 		</A>
-		<C>
-			<D>b</D>
-		</C>
+		<B>
+			<C>b</C>
+		</B>
 	</transitions>
 </automata>

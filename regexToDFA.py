@@ -11,11 +11,11 @@ def process_regex(regex_string):
     
     #Case 1: regex string is empty
     if( len(regex_string) == 0 ):
-        return
+        raise Exception("Empty regex entered. (No symbols)")
 
     #Case 2: regex string is just one whitespace
     if( len(regex_string) == 1 and regex_string == ' '):
-        return
+        raise Exception("Empty regex entered. (Whitespace)")
 
     #Regular expression to match against whitespaces in string
     pattern=r"\s+"
@@ -180,29 +180,62 @@ def convert_eNfa_to_nfa(eNfa: Automata):
                 if transitionSymbol != None and ord(next(iter(transitionSymbol))) != ord('ε'):  #Check if ttransition is epsilopn transition.
                     #Add transition to newNFA if not
                     print("TODO")
+
 try:
-    #0. Get input string
+    isContinuing = True
+    
+    while(isContinuing): 
 
-    #1. Format input string
-    processed_regex_string = process_regex("(ab)+c")
+        print("Please enter a number corresponding to a valid option : \n1. Regex to minDFA program. \n2. Exit program\n")        
+        
 
-    print("Regex string",processed_regex_string)
+        user_option_select = input("Option: ")
 
-    #2. Convert input string to e-NFA
-    eNfa: Automata = convert_regex_to_nfa(processed_regex_string)
+        option = int( user_option_select)
+        
+        if(option == 1):
+            #0. Get input string
+            user_regex_input = input("Please enter a valid regex expression: ")
+            
+            #1. Format input string
+            processed_regex_string = process_regex(user_regex_input)
 
-    #2.1. Print out intermediate e-NFA
-    utils.drawGraph(eNfa, "E-NFA")
+            print("Processing Regex string : ",processed_regex_string)
+            
+            print("Creating NFA....\n")
+            
+            #2. Convert input string to e-NFA
+            eNfa: Automata = convert_regex_to_nfa(processed_regex_string)
 
-    #3. Convert NFA to DFA
-    dfa: Automata = eNFA_to_DFA(eNfa)
+            print("NFA done! Open graphNFA.png to view generated NFA.\n")
+            
+            #2.1. Print out intermediate e-NFA
+            utils.drawGraph(eNfa, "NFA")
+            
+            print("Converting NFA to DFA...\n")
+            
+            #3. Convert NFA to DFA
+            dfa: Automata = eNFA_to_DFA(eNfa)
 
-    #4. Convert DFA to corresponding minDFA
-    #nfa: Automata = convert_eNfa_to_nfa(eNfa)
+            print("DFA done! Open graphDFA.png to view generated DFA.\n")
+            
+            #3.1. Print out intermediate DFA
+            utils.drawGraph(dfa, "DFA")
 
-    #5. Print minDFA to XML Document
-    outputXMLFile(dfa)
+            #4. Convert DFA to corresponding minDFA
+            #nfa: Automata = convert_eNfa_to_nfa(eNfa)
 
+            print("Outputting minDFA to XML.....\n")
+            #5. Print minDFA to XML Document
+
+            outputXMLFile(dfa)
+            print("minDFA output done! Open MinDFAXML.xml to view generated minDFA.\n\n")
+
+        elif(option == 2):
+                break
+        
+        else:
+            print("Please make a valid selection.\n\n")
     
 
 
