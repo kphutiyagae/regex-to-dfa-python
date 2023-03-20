@@ -1,11 +1,15 @@
 
+import os
 import re
+import sys
 from typing import Dict
 from automata_tools import Automata
 from automata_tools import utils
 import NFAFromRegex
 import xml.dom.minidom
 import string
+
+application_path = os.path.dirname(sys.executable)
 
 def process_regex(regex_string):
     
@@ -150,37 +154,77 @@ def outputXMLFile(minDFA: Automata):
     with open("MinDFAXML.xml", "w") as f:
         f.write(new_xml)
 
-def convert_eNfa_to_nfa(eNfa: Automata):
-    newNfa = []
-    automata = []
-    finalStates = []
-    eNfaStates = eNfa.states
+def checkForTransition(stateA, stateB, symbol, dfa: Automata):
+    transition = dfa.transitions.get(stateA)
+    if(transition != None):
+        t = transition.get(stateB)
+        if(t != None):
+            if( t == symbol):
+                return True
+            else:
+                return False
+    return False
 
-    #1. Copy over all states in eNfa
-    for state in eNfaStates:
-        newNfa.append(state)
+def get_next_state_on_symbol(state, symbol, dfa: Automata):
+    transition = dfa.transitions.get(state)
+    if(transition != None):
+        for k in transition.keys():
+            s = next(iter(transition.get(k)))
+            if s == symbol:
+                return k
+        return None
+
+def convert_dfa_to_minDfa(dfa: Automata):
+    states = dfa.states
+    finalStates = dfa.finalstates
+    finalStatesList = []
+    unifiedStatesSet = []
+
+    for s in states:
+        unifiedStatesSet.append(s)
+
+    for fState in finalStates:
+        unifiedStatesSet.append(next(iter(fState)))
+        finalStatesList.append(next(iter(fState)))
+
+    #1. Create state pair matrix.
+    statesMatrix = [[0 for x in range(len(unifiedStatesSet))] for y in range(len(unifiedStatesSet))]
+
+    #2. Set Distinguishable states in matrix
+    for i in range(0, len(unifiedStatesSet)):
+        for j in range(0, len(unifiedStatesSet)):
+            stateA = unifiedStatesSet[i]
+            stateB = unifiedStatesSet[j]
+            if( ((finalStatesList.__contains__(stateA) == True and finalStatesList.__contains__(stateB) != True) or (finalStatesList.__contains__(stateA) != True and finalStatesList.__contains__(stateB) == True)) and statesMatrix[i][j] == 0 ):
+                # Distinguishable state found - mark in matrix
+                statesMatrix[i][j] = 1
+
+    #3. Start algorithim to check states recursively
+    isNotDone = False
     
-    #2. Set start state for nfa. 
-    newNfaStartState = eNfa.startstate
+    initialcount = 1
 
-    #3. Get all final states for e-NFA.
-    finalStates.append(eNfa.finalstates)
+    while(isNotDone or initialcount == 1):
+        if(initialcount == 1):
+            initialcount = initialcount - 1
+        isNotDone = False
+        #Check entire array
+        for i in range(0,len(unifiedStatesSet)):
+            for j in range(0, len(unifiedStatesSet)):
+                #Get a pair of states
+                stateA = unifiedStatesSet[i]
+                stateB = unifiedStatesSet[j]
+                if(statesMatrix[stateA][stateB] == 0):
+                    for symbol in dfa.language:
+                        sym = next(iter(symbol))
+                    
+                        transA = get_next_state_on_symbol(stateA, symbol, dfa)
+                        transB = get_next_state_on_symbol(stateB, symbol, dfa)
 
-    #4. Get all epsilon-reachable states
-
-    #5. Get transitions
-#    for i in range (1, len(eNfa.transitions) + 1):
-#        transition = eNfa.transitions[i]
-    for state in newNfa:
-      transition = eNfa.transitions.get(state)  
-      if(transition != None):
-        for state in newNfa:
-            transitionSymbol = transition.get(state)
-            if(transitionSymbol != None):
-                if transitionSymbol != None and ord(next(iter(transitionSymbol))) != ord('ε'):  #Check if ttransition is epsilopn transition.
-                    #Add transition to newNFA if not
-                    print("TODO")
-
+                        if(statesMatrix[transA][transB] == 1):
+                            statesMatrix[stateA][stateB] = 1 #Mark state pair
+                            isNotDone = True
+                        
 try:
     isContinuing = True
     
@@ -188,7 +232,6 @@ try:
 
         print("Please enter a number corresponding to a valid option : \n1. Regex to minDFA program. \n2. Exit program\n")        
         
-
         user_option_select = input("Option: ")
 
         option = int( user_option_select)
@@ -223,7 +266,7 @@ try:
             utils.drawGraph(dfa, "DFA")
 
             #4. Convert DFA to corresponding minDFA
-            #nfa: Automata = convert_eNfa_to_nfa(eNfa)
+            #minfa: Automata = convert_dfa_to_minDfa(dfa)
 
             print("Outputting minDFA to XML.....\n")
             #5. Print minDFA to XML Document
